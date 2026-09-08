@@ -1,3 +1,5 @@
+import sys
+
 def handle_git_error(error_message):
 
     if "non-fast-forward" in error_message or "fetch first" in error_message:
@@ -24,3 +26,7 @@ def handle_git_error(error_message):
         "explanation": explanation,
         "recommended": recommended
     }
+
+def handle_keyboard_interrupt():
+    print("\nOperation canceled by user.")
+    sys.exit()
