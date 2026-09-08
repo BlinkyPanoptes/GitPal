@@ -1,5 +1,6 @@
 import subprocess
-from git_auth import is_github_authenticated, authenticate_github
+from error_handler import handle_keyboard_interrupt
+from git_auth import is_github_authenticated, authenticate_github, is_gh_installed, is_git_installed
 from git_remote import has_git_remote, git_remote_origin, remote_repository, verify_git_remote
 from git_operations import collect_staged_files, get_repository_status, stages_changes, git_push_changes, has_staged_changes, is_git_repository
 from git_staging import stage_changes
@@ -124,127 +125,153 @@ def main_menu():
 
 # Main program execution
 def main():
+    try:
+        # ==========================================
+        # 0. CHECK GITHUB CLI IF INSTALLED
+        # ==========================================
 
-    # ==========================================
-    # 1. CHECK GITHUB AUTHENTICATION
-    # ==========================================
+        loading_screen("Checking Git installation: ")
 
-    loading_screen("Checking Github authentication: ")
+        if is_git_installed():
+            color_text("Git is installed.\n", "green")
+        else:
+            color_text("Git is not installed.", "red")
+            color_text("Please install the Git to use this tool.", "yellow")
+            color_text("Visit: (https://git-scm.com/downloads) for installation instructions.", "yellow")
+            exit_gitpal()
 
-    if is_github_authenticated():
-        color_text("GitHub account is already authenticated.\n", "green")
+        loading_screen("Checking gh installation: ")
 
-    else:
-        color_text("GitHub authentication failed.", "yellow")
+        if is_gh_installed():
+            color_text("GitHub CLI is installed.\n", "green")
+        else:
+            color_text("GitHub CLI is not installed.", "red")
+            color_text("Please install the GitHub CLI to use this tool.", "yellow")
+            color_text("Visit: https://cli.github.com/ for installation instructions.", "yellow")
+            exit_gitpal()
 
-        console.rule("[bold cyan]GitHub Authentication[/bold cyan]")
-        user_auth_answer = console.input(
-            "[bold cyan]Do you want to authenticate with GitHub? (y/n) > [/bold cyan]"
-        )
+        # ==========================================
+        # 1. CHECK GITHUB AUTHENTICATION
+        # ==========================================
 
-        if user_auth_answer.lower() == 'y':
+        loading_screen("Checking Github authentication: ")
 
-            if authenticate_github():
-                color_text("Successfully authenticated with GitHub.\n", "green")
+        if is_github_authenticated():
+            color_text("GitHub account is already authenticated.\n", "green")
+
+        else:
+            color_text("GitHub authentication failed.", "yellow")
+
+            console.rule("[bold cyan]GitHub Authentication[/bold cyan]")
+            user_auth_answer = console.input(
+                "[bold cyan]Do you want to authenticate with GitHub? (y/n) > [/bold cyan]"
+            )
+
+            if user_auth_answer.lower() == 'y':
+
+                if authenticate_github():
+                    color_text("Successfully authenticated with GitHub.\n", "green")
+
+                else:
+                    print("GitHub authentication canceled.")
+                    exit_gitpal()
 
             else:
                 print("GitHub authentication canceled.")
                 exit_gitpal()
 
+        # ==========================================
+        # 2. CHECK LOCAL GIT REPOSITORY
+        # ==========================================
+
+        loading_screen("Checking Git repository: ")
+
+        if is_git_repository():
+            color_text("This is a Git repository.\n", "green")
+
         else:
-            print("GitHub authentication canceled.")
-            exit_gitpal()
+            color_text("This is not a Git repository.", "red")
 
-
-    # ==========================================
-    # 2. CHECK LOCAL GIT REPOSITORY
-    # ==========================================
-
-    loading_screen("Checking Git repository: ")
-
-    if is_git_repository():
-        color_text("This is a Git repository.\n", "green")
-
-    else:
-        color_text("This is not a Git repository.", "red")
-
-        console.rule("[bold cyan]Git Repository Initialization[/bold cyan]")
-        user_answer = console.input(
-            "[bold cyan]Do you want to initialize a new Git repository here? (y/n) > [/bold cyan]"
-        )
-
-        if user_answer.lower() == 'y':
-
-            # Run the git command 'git init'
-            init_git_repo = subprocess.run(
-                ['git', 'init'],
-                capture_output=True,
-                text=True
+            console.rule("[bold cyan]Git Repository Initialization[/bold cyan]")
+            user_answer = console.input(
+                "[bold cyan]Do you want to initialize a new Git repository here? (y/n) > [/bold cyan]"
             )
 
-            if init_git_repo.returncode == 0:
-                color_text("\nSuccessfully initialized a new Git repository.", "green")
+            if user_answer.lower() == 'y':
 
-                # Check if the repository is now initialized
-                if is_git_repository():
-                    color_text("This is now a Git repository.\n", "green")
-                else:
-                    color_text("Failed to verify the Git repository initialization.\n", "red")
+                # Run the git command 'git init'
+                init_git_repo = subprocess.run(
+                    ['git', 'init'],
+                    capture_output=True,
+                    text=True
+                )
 
-            else:
-                color_text("\nFailed to initialize a Git repository.", "red")
-                color_text("\nGit Error:", "red")
-                print(init_git_repo.stderr)
+                if init_git_repo.returncode == 0:
+                    color_text("\nSuccessfully initialized a new Git repository.", "green")
 
-        else:
-            print("\nGit repository initialization canceled.")
-            exit_gitpal()
-
-    # ==========================================
-    # 3. CHECK GIT REMOTE
-    # ==========================================
-
-    if has_git_remote():
-
-        loading_screen("Checking remote repository: ")
-
-        color_text("This Git repository is connected to a remote repository.", "green")
-    else:
-        color_text("This Git repository is not connected to any remote repository.", "red")
-
-        console.rule("[bold cyan]Remote Repository Connection[/bold cyan]")
-        user_input = console.input("[bold cyan]Do you want to connect this into an existing remote repository? (y/n) > [/bold cyan]")
-
-        if user_input.lower() == 'y':
-            remote_origin_input = console.input("\n[bold cyan]Paste your remote origin repository link here > [/bold cyan]")
-
-            print()
-            loading_screen("Verifying the remote repository: ")
-
-            if verify_git_remote(remote_origin_input):
-
-                if git_remote_origin(remote_origin_input):
-                    color_text("Successfully connected to the remote repository.", "green")
+                    # Check if the repository is now initialized
+                    if is_git_repository():
+                        color_text("This is now a Git repository.\n", "green")
+                    else:
+                        color_text("Failed to verify the Git repository initialization.\n", "red")
 
                 else:
-                    color_text("Failed to connect to the remote repository", "red")
+                    color_text("\nFailed to initialize a Git repository.", "red")
+                    color_text("\nGit Error:", "red")
+                    print(init_git_repo.stderr)
 
             else:
-                color_text("The GitHub repository could not be found or accessed.", "yellow")
-                color_text("Please check the repository URL and your GitHub permissions.", "yellow")
+                print("\nGit repository initialization canceled.")
+                exit_gitpal()
 
-                time.sleep(3)
+        # ==========================================
+        # 3. CHECK GIT REMOTE
+        # ==========================================
 
+        if has_git_remote():
 
+            loading_screen("Checking remote repository: ")
+
+            color_text("This Git repository is connected to a remote repository.", "green")
         else:
-            print("\nRemote repository connection canceled.")
+            color_text("This Git repository is not connected to any remote repository.", "red")
+
+            console.rule("[bold cyan]Remote Repository Connection[/bold cyan]")
+            user_input = console.input("[bold cyan]Do you want to connect this into an existing remote repository? (y/n) > [/bold cyan]")
+
+            if user_input.lower() == 'y':
+                remote_origin_input = console.input("\n[bold cyan]Paste your remote origin repository link here > [/bold cyan]")
+
+                print()
+                loading_screen("Verifying the remote repository: ")
+
+                if verify_git_remote(remote_origin_input):
+
+                    if git_remote_origin(remote_origin_input):
+                        color_text("Successfully connected to the remote repository.", "green")
+
+                    else:
+                        color_text("Failed to connect to the remote repository", "red")
+
+                else:
+                    color_text("The GitHub repository could not be found or accessed.", "yellow")
+                    color_text("Please check the repository URL and your GitHub permissions.", "yellow")
+
+                    time.sleep(3)
 
 
-    # ==========================================
-    # 4. MAIN MENU
-    # ==========================================
+            else:
+                print("\nRemote repository connection canceled.")
 
-    main_menu()
+
+        # ==========================================
+        # 4. MAIN MENU
+        # ==========================================
+
+        main_menu()
+
+    except KeyboardInterrupt:
+        handle_keyboard_interrupt()
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 
 def is_github_authenticated():
     # Check the current GitHub authentication status
@@ -22,3 +23,15 @@ def authenticate_github():
         return True
     else:
         return False
+
+def is_git_installed():
+    # Check if git is installed by looking for its executable in the system PATH
+    git_installed = shutil.which("git") is not None
+
+    return git_installed
+
+def is_gh_installed():
+    # Check if gh is installed by looking for its executable in the system PATH
+    gh_installed = shutil.which("gh") is not None
+
+    return gh_installed
