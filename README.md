@@ -1,17 +1,17 @@
 # GitPal
 
-A pal for your daily Git needs.
+A pal for your daily Git needs. Run `gitpal` inside a repository and a desktop window opens, ready to check your setup, stage, commit and push.
 
 ## Requirements
 
-- Python 3.10 or later
+- Python 3.10 or later, with tkinter (included with the standard Python installer on Windows and macOS; on Debian/Ubuntu install it with `sudo apt install python3-tk`)
 - [Git](https://git-scm.com/downloads)
 - [GitHub CLI (`gh`)](https://cli.github.com/), used for GitHub authentication and remote repository verification
 - [pipx](https://pipx.pypa.io/) (recommended) for installing GitPal as a standalone command
 
 ## Installation
 
-GitPal is a CLI tool, so it's meant to be installed once and run from anywhere — not activated inside a project's virtual environment.
+GitPal is installed once and run from anywhere — not activated inside a project's virtual environment.
 
 ### Option 1: pipx (recommended)
 
@@ -28,11 +28,7 @@ cd GitPal
 pipx install .
 ```
 
-After installation, restart your terminal (so the updated `PATH` takes effect) and run:
-
-```bash
-gitpal
-```
+After installation, restart your terminal (so the updated `PATH` takes effect) and run `gitpal`.
 
 ### Option 2: pip (in a virtual environment)
 
@@ -54,53 +50,49 @@ gitpal
 ```bash
 cd GitPal
 git pull
-pipx reinstall gitpal   # or: pip install --upgrade . (Option 2)
+pipx install . --force   # or: pip install --upgrade . (Option 2)
 ```
 
 ## Usage
 
-Run `gitpal` from inside the local Git repository you want to work with:
+Go to the local Git repository you want to work with and run `gitpal`. The window opens and your terminal is free again right away:
 
 ```bash
 cd path/to/your/project
 gitpal
 ```
 
-On first run, GitPal walks you through setup:
+GitPal works on the folder you start it from, and shows that folder at the top of its terminal panel.
 
-1. **GitHub authentication** — checks whether you're logged in via GitHub CLI, and offers to run `gh auth login` if not.
-2. **Local repository check** — detects whether the current directory is a Git repository, and offers to run `git init` if it isn't.
-3. **Remote check** — detects whether a remote is configured, and lets you connect one by pasting a repository URL.
+The window has four areas:
 
-Once setup is complete, you land on the main menu:
+- **Git Authentication Checker** — runs the startup checks (Git installed, `gh` installed, GitHub authenticated, Git repository, remote repository) and marks each one **Done** (green) or **Failed** (red). If something is missing it asks whether to fix it: log in to GitHub, run `git init`, or connect a remote repository.
+- **Current Remote** — shows the repository you are connected to, with a **Change Remote** button.
+- **Terminal** — shows the folder you are working in and prints the output of every action: green for success, yellow for instructions and warnings, red for errors.
+- **Buttons**
+  - **Repository Status** — view untracked, modified, and staged files at a glance
+  - **Stage Changes** — stage everything (`git add .`) or pick specific files
+  - **Commit Changes** — review what's staged, confirm, and enter a commit message
+  - **Push Changes** — push to the configured remote, with plain-language explanations if it fails
+  - **Exit** — quit GitPal
 
-```text
-                Welcome to GitPal
- Option  Action
- 1       Repository Status
- 2       Stage Changes
- 3       Commit Changes
- 4       Push Changes
- 5       Remote Repository
- 6       Exit
+Choices and text input (staging options, file selection, commit message, remote URL) appear as pop-up windows. Git commands run in the background, so the window never freezes during a push, and the buttons are disabled while an action is running. When you log in to GitHub from GitPal, `gh auth login` opens in its own console window.
+
+To run GitPal straight from a clone without installing it:
+
+```bash
+python src/gui.py
 ```
-
-From here you can:
-
-- **Repository Status** — view untracked, modified, and staged files at a glance
-- **Stage Changes** — stage everything (`git add .`) or pick specific files
-- **Commit Changes** — review what's staged, confirm, and enter a commit message
-- **Push Changes** — push to the configured remote, with plain-language explanations if it fails
-- **Remote Repository** — view or change the configured `origin` remote
-- **Exit** — quit GitPal
 
 ## Current Version
 
-**v0.3.0 — Packaged CLI Release**
+**v0.4.0 — Desktop GUI Release**
 
-GitPal is a terminal-based Git and GitHub assistant built with Python. It is currently in early development.
+GitPal is a Git and GitHub assistant built with Python. It is currently in early development.
 
-Version 0.3.0 expands GitPal from a startup and repository configuration tool into a functional Git workflow assistant. It introduces repository status monitoring, directory inspection, staging, committing, pushing, remote repository management, Git error handling, loading animations, and colorized terminal output through an interactive command-line interface. It also packages GitPal as an installable CLI tool, so it runs via a standalone `gitpal` command instead of requiring a project virtual environment.
+Version 0.4.0 turns GitPal into a desktop application built with tkinter. Running `gitpal` now opens a window that brings the startup checks, repository status, staging, committing, pushing and remote management together, with a built-in terminal output panel, rounded buttons that respond to hover and click, pop-up dialogs for input, and background execution of Git commands.
+
+Version 0.3.0 expanded GitPal from a startup and repository configuration tool into a functional Git workflow assistant and packaged it as an installable `gitpal` command.
 
 ## Current Features
 
@@ -139,17 +131,16 @@ Version 0.3.0 expands GitPal from a startup and repository configuration tool in
 - Identify staged additions
 - Identify staged deletions
 - Detect when the working tree is clean
-- Display status information using color-coded output
+- Display status information as a color-coded table
 
 ### Directory Inspection
 
-- Display files and directories contained within the current repository
-- Exclude the `.git` directory from displayed contents
+- Exclude the `.git` directory from the project files
 - Warn the user when a repository contains no project files
 
 ### Git Operations
 
-- Stage changes using `git add .`
+- Stage all changes, or only the files you select
 - Display files successfully staged
 - Validate that changes exist before staging
 - Validate that staged changes exist before committing
@@ -165,19 +156,14 @@ Version 0.3.0 expands GitPal from a startup and repository configuration tool in
 - Provide recommended actions when a recognized error occurs
 - Provide a generic explanation for unrecognized Git errors
 
-### Terminal UI
+### Desktop Interface
 
-GitPal is designed around a terminal-first workflow rather than a separate graphical interface.
-
-Current UI features include:
-
-- Loading animations for repository checks and operations
-- Colorized terminal output
-- Green output for successful operations
-- Yellow output for instructions and actions requiring attention
-- Red output for errors and failures
-- White (default) output for neutral, informational messages
-- Structured interactive menus
-- Dedicated UI modules for terminal presentation
-
-See the [Usage](#usage) section above for a look at the main menu.
+- Startup checks with live Done / Failed status
+- Offers to fix a failed check (GitHub login, `git init`, connect a remote)
+- Shows the connected remote repository and lets you change it
+- Repository status, staging, committing and pushing from one window
+- Terminal-style output panel with color coding: green for success, yellow for instructions, red for errors, white for neutral messages
+- Rounded interface with hover and click feedback on buttons
+- Pop-up dialogs for choices, file selection and text input
+- Git commands run in the background so the window stays responsive
+- Opens without leaving a terminal or console windows behind (Windows)
